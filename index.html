@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-center mb-6">Fake News Analyzer</h1>
+        <div class="mb-4">
+            <textarea id="newsText" class="w-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" rows="6" placeholder="Enter news text here..."></textarea>
+        </div>
+        <button id="analyzeBtn" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">Analyze</button>
+        <div id="result" class="mt-6 hidden">
+            <h2 class="text-xl font-semibold">Result:</h2>
+            <p id="prediction" class="mt-2"></p>
+            <p id="confidence" class="mt-1"></p>
+        </div>
+        <div id="error" class="mt-4 text-red-500 hidden"></div>
+    </div>
+
+    <script>
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const newsText = document.getElementById('newsText');
+        const resultDiv = document.getElementById('result');
+        const prediction = document.getElementById('prediction');
+        const confidence = document.getElementById('confidence');
+        const errorDiv = document.getElementById('error');
+
+        analyzeBtn.addEventListener('click', async () => {
+            const text = newsText.value.trim();
+            if (!text) {
+                showError('Please enter news text');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    prediction.textContent = `Prediction: ${data.label}`;
+                    confidence.textContent = `Confidence: ${data.confidence}%`;
+                    resultDiv.classList.remove('hidden');
+                    errorDiv.classList.add('hidden');
+                } else {
+                    showError(data.message);
+                }
+            } catch (err) {
+                showError('Failed to connect to the server');
+            }
+        });
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
